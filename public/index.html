@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title> socketio redis store </title>
+    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet" />
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.1.min.js"> </script>
+    <script type="text/javascript">
+      var socket = io.connect('http://<%=host%>');
+
+      $(document).ready(function() {
+        socket.on('connected', function() {
+          console.log('connected');
+        });
+
+        // Complete matching
+        socket.on('completeMatch', function(data) {
+          console.log('completeMatch!');
+          $('.lobby').hide();
+          $('.wait').hide();
+          $('.chat').show();
+        });
+
+        // When he/she receive message
+        socket.on('receiveMessage', function(data) {
+          $('.chatResult').append('<li>' + data.message + '</li>');
+        });
+
+        // When pair is exit, then I also exit to robby
+        socket.on('disconnect', function(data) {
+          console.log('disconnect');
+          $('.lobby').show();
+          $('.chat').hide();
+        });
+
+        // If request random
+        $('#btnRequestRandomChat').click(function() {
+          $('.lobby').hide();
+          $('.wait').show();
+          socket.emit('requestRandomChat');
+        });
+
+        // If request cancel
+        $('#btnCancelRequest').click(function() {
+          $('.lobby').show();
+          $('.wait').hide();
+          $('.chat').hide();
+          socket.emit('cancelRequest');
+        });
+
+        // If input enter key
+        $('#inputMessage').keyup(function(e) {
+          if(e.keyCode == 13) {
+            send();
+          }
+        });
+
+        // If send chatting message
+        $('#btnChat').click(function() {
+          send();
+        });
+      });
+
+      function send() {
+        var message = $('#inputMessage').val();
+        if(message.length < 1) {
+          alert('내용을 입력하세요');
+          return ;
+        }
+        socket.emit('sendMessage', {message:message});
+        $('#inputMessage').val('');
+      }
+  </head>
+  <body>
+    <div class="lobby container">
+      <button id="btnRequestRandomChat" class="btn">채팅입장</button>
+    </div>
+    <div class="wait container" style="display:none">
+      <div>상대방을 기다리는 중...</div>
+      <button id="btnCancelRequest" class="btn">취소</button>
+    </div>
+
+  </body>
+</html>
